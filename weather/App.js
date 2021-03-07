@@ -19,36 +19,44 @@ import {
   StatusBar,
 } from 'react-native';
 
-import {Header, Colors} from 'react-native/Libraries/NewAppScreen';
-
 import api from './api';
 
 const App = () => {
   const [coord, setCoord] = React.useState({});
   const [obj, setObj] = React.useState({});
 
-  async function success(pos) {
-    const crd = pos.coords;
+  React.useEffect(() => {
+    function success(pos) {
+      const crd = pos.coords;
+      setCoord(crd);
+      (async function () {
+        const obj = await api(crd.latitude, crd.longitude);
+        setObj(obj);
+      })();
+    }
 
-    setCoord(crd);
-    const getData = async () => {
-      const obj = await api(crd.latitude, crd.longitude);
-      setObj(obj);
-    };
-    await getData();
-  }
+    function error(err) {
+      console.warn(`ERROR(${err.code}): ${err.message}`);
+    }
 
-  function error(err) {
-    console.warn(`ERROR(${err.code}): ${err.message}`);
-  }
+    Geolocation.getCurrentPosition(success, error);
+  }, [coord]);
 
-  Geolocation.getCurrentPosition(success, error, {
-    enableHighAccuracy: true,
-    timeout: 5000,
-    maximumAge: 1000,
-  });
+  const {
+    city,
+    pressure,
+    temp,
+    wind_speed,
+    clouds,
+    dayTime,
+    sunrise,
+    sunset,
+  } = obj;
 
-  const {city, pressure, temp, wind_speed} = obj;
+  const dateNow = new Date(dayTime * 1000).toLocaleDateString();
+  const sunR = new Date(sunrise * 1000).toLocaleTimeString();
+  const sunS = new Date(sunset * 1000).toLocaleTimeString();
+  // console.log(sunR);
 
   return (
     <>
@@ -57,23 +65,21 @@ const App = () => {
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           style={styles.scrollView}>
-          {global.HermesInternal == null ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
-
           <View style={styles.body}>
             <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Your city {city}</Text>
-
+              <Text style={styles.sectionTitle}>
+                Your city {city} {dateNow}
+              </Text>
               <Text style={styles.highlight}>
                 latitude: {coord.latitude}, longitude: {coord.longitude}
               </Text>
               <Text style={styles.sectionTitle}>Weather </Text>
-              <Text style={styles.highlight}>pressure: {pressure} bar</Text>
-              <Text style={styles.highlight}>temperature: {temp} C</Text>
+              <Text style={styles.highlight}>pressure: {pressure} kPa</Text>
+              <Text style={styles.highlight}>temperature: {temp} ˚C</Text>
               <Text style={styles.highlight}>wind speed: {wind_speed} m/c</Text>
+              <Text style={styles.highlight}>clouds: {clouds}%</Text>
+              <Text style={styles.highlight}>sunrise: {sunR}</Text>
+              <Text style={styles.highlight}>sunset: {sunS}</Text>
             </View>
           </View>
         </ScrollView>
@@ -84,14 +90,11 @@ const App = () => {
 
 const styles = StyleSheet.create({
   scrollView: {
-    backgroundColor: Colors.lighter,
+    backgroundColor: '#fff',
   },
-  engine: {
-    position: 'absolute',
-    right: 0,
-  },
+
   body: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#fff',
   },
   sectionContainer: {
     marginTop: 32,
@@ -100,19 +103,20 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: Colors.black,
+    color: '#000',
+    textAlign: 'center',
   },
   sectionDescription: {
     marginTop: 8,
     fontSize: 18,
     fontWeight: '400',
-    color: Colors.dark,
+    color: '#000',
   },
   highlight: {
     fontWeight: '700',
   },
   footer: {
-    color: Colors.dark,
+    color: '#000',
     fontSize: 12,
     fontWeight: '600',
     padding: 4,
