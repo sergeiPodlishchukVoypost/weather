@@ -7,6 +7,9 @@
  */
 
 import React from 'react';
+
+import Geolocation from '@react-native-community/geolocation';
+
 import {
   SafeAreaView,
   StyleSheet,
@@ -16,15 +19,37 @@ import {
   StatusBar,
 } from 'react-native';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Header, Colors} from 'react-native/Libraries/NewAppScreen';
 
-const App: () => React$Node = () => {
+import api from './api';
+
+const App = () => {
+  const [coord, setCoord] = React.useState({});
+  const [obj, setObj] = React.useState({});
+
+  async function success(pos) {
+    const crd = pos.coords;
+
+    setCoord(crd);
+    const getData = async () => {
+      const obj = await api(crd.latitude, crd.longitude);
+      setObj(obj);
+    };
+    await getData();
+  }
+
+  function error(err) {
+    console.warn(`ERROR(${err.code}): ${err.message}`);
+  }
+
+  Geolocation.getCurrentPosition(success, error, {
+    enableHighAccuracy: true,
+    timeout: 5000,
+    maximumAge: 1000,
+  });
+
+  const {city, pressure, temp, wind_speed} = obj;
+
   return (
     <>
       <StatusBar barStyle="dark-content" />
@@ -32,39 +57,24 @@ const App: () => React$Node = () => {
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           style={styles.scrollView}>
-          <Header />
           {global.HermesInternal == null ? null : (
             <View style={styles.engine}>
               <Text style={styles.footer}>Engine: Hermes</Text>
             </View>
           )}
+
           <View style={styles.body}>
             <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.js</Text> to change this
-                screen and then come back to see your edits.
+              <Text style={styles.sectionTitle}>Your city {city}</Text>
+
+              <Text style={styles.highlight}>
+                latitude: {coord.latitude}, longitude: {coord.longitude}
               </Text>
+              <Text style={styles.sectionTitle}>Weather </Text>
+              <Text style={styles.highlight}>pressure: {pressure} bar</Text>
+              <Text style={styles.highlight}>temperature: {temp} C</Text>
+              <Text style={styles.highlight}>wind speed: {wind_speed} m/c</Text>
             </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks />
           </View>
         </ScrollView>
       </SafeAreaView>

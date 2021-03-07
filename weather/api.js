@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_KEY = '122a2fa1f27a8aa65f79180c2a64b5f2';
+const API_KEY = 'fbd583dc2f80d482ff910a55bc914fd9';
 
 axios.defaults.baseURL = 'http://api.openweathermap.org/data/2.5/weather';
 
@@ -14,7 +14,7 @@ export default async function getWeather(latitude, longitude) {
     const objWeather = {
       city: name,
       pressure: main.pressure,
-      temp: main.temp - 273,
+      temp: Math.round(main.temp - 273),
       wind_speed: wind.speed,
       // lat: coord.latitude,
       // lon: coord.longitude,
